@@ -5,9 +5,11 @@ import com.project_management.dto.CalibrationDto;
 import com.project_management.dto.CalibrationTestResultDto;
 import com.project_management.models.CalibrationQuestions;
 import com.project_management.models.CalibrationTest;
+import com.project_management.models.CalibrationTestResultHistory;
 import com.project_management.models.UserBasics;
 import com.project_management.repositories.CalibrationQuestionRepository;
 import com.project_management.repositories.CalibrationTestRepository;
+import com.project_management.repositories.CalibrationTestResultHistoryRepository;
 import com.project_management.services.CalibrationService;
 import com.project_management.services.UserBasicService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,8 @@ public class CalibrationServiceImpl implements CalibrationService {
     CalibrationQuestionRepository calibrationQuestionRepository;
     @Autowired
     CalibrationTestRepository calibrationTestRepository;
+    @Autowired
+    CalibrationTestResultHistoryRepository calibrationTestResultHistoryRepository;
     @Autowired
     UserBasicService userBasicService;
 
@@ -91,6 +95,14 @@ public class CalibrationServiceImpl implements CalibrationService {
         resultDto.setCorrectAnswers(correctCount);
         resultDto.setWrongAnswers(wrongCount);
         resultDto.setPoints(points);
+
+        CalibrationTestResultHistory history = new CalibrationTestResultHistory();
+        history.setTestId(answerDto.getTestId());
+        history.setUserId(answerDto.getUserId());
+        history.setCorrectAnswers(correctCount);
+        history.setIncorrectAnswers(wrongCount);
+        history.setPoints(points);
+        calibrationTestResultHistoryRepository.save(history);
 
         return resultDto;
     }

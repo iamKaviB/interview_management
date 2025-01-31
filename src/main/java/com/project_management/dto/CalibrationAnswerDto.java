@@ -8,6 +8,7 @@ import java.util.List;
 public class CalibrationAnswerDto {
 
     private Long testId;
+    private Long userId;
     private List<CalAnswerDto> answerList;
 
     @Data
