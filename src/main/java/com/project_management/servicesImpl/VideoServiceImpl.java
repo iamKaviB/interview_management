@@ -53,6 +53,12 @@ public class VideoServiceImpl implements VideoService {
             tempReq.setRole(userBasics.getJobRole());
             tempReq.setCurrentLevel(userBasics.getExperience());
             tempReq.setTargetLevel(userBasics.getTargetRole());
+            if ("MID".equalsIgnoreCase(userBasics.getTargetRole())) {
+                tempReq.setTargetLevel("Mid-level");
+            }
+            if ("MID".equalsIgnoreCase(userBasics.getJobRole())) {
+                tempReq.setCurrentLevel("Mid-level");
+            }
             tempReq.setSkillTopic(videoType.getTopic());
             tempReq.setChapter("1");
 
@@ -74,7 +80,8 @@ public class VideoServiceImpl implements VideoService {
             videoStringList.forEach(video->{
                 VideoResponseDto.VideoCatDto videoDto = new VideoResponseDto.VideoCatDto();
                 videoDto.setType(video);
-                videoTypeRepository.findAllByType(video).forEach(temp->{
+                List<VideoType> tempVideoTypeList = videoTypeRepository.findAllByType(video);
+                tempVideoTypeList.forEach(temp->{
                    List<Video> videoList =videoRepository.findAllByTypeId(temp.getId());
                    videoDto.setVideoDtoList(videoList);
                 });
