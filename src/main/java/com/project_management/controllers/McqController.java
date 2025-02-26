@@ -1,5 +1,6 @@
 package com.project_management.controllers;
 
+import com.project_management.dto.IncorrectAnswersResponseDTO;
 import com.project_management.dto.McqRequestDto;
 import com.project_management.dto.McqStartResponseDto;
 import com.project_management.dto.McqSubmitAnswerRequestDto;
@@ -21,6 +22,9 @@ public class McqController {
 
     @Value("${api.mcq.submit.url}")
     private String mcqSubmitUrl;
+
+    @Value("${api.mcq.incorrect.url}")
+    private String mcqIncorrectUrl;
 
     @PostMapping
     public ResponseEntity<McqStartResponseDto> startGame(@RequestBody McqRequestDto requestDto){
@@ -62,6 +66,31 @@ public class McqController {
                 HttpMethod.POST,
                 entity,
                 McqStartResponseDto.class
+        );
+
+        // Check the response status and handle errors
+        if (!mlResponse.getStatusCode().is2xxSuccessful() || mlResponse.getBody() == null) {
+            throw new RuntimeException("Failed to get prediction from ML service: " +
+                    mlResponse.getStatusCode());
+        }
+
+        return mlResponse;
+    }
+
+    @GetMapping("/incorrect")
+    public ResponseEntity<IncorrectAnswersResponseDTO> getIncorrect(@RequestHeader(name = "X-Session-ID") String session){
+
+        // Prepare headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<?> entity = new HttpEntity<>(null, headers);
+
+        // Send the request to the ML service
+        ResponseEntity<IncorrectAnswersResponseDTO> mlResponse = restTemplate.exchange(
+                mcqIncorrectUrl+"/"+session,
+                HttpMethod.GET,
+                entity,
+                IncorrectAnswersResponseDTO.class
         );
 
         // Check the response status and handle errors
