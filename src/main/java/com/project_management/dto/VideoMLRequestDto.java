@@ -6,14 +6,10 @@ import lombok.Data;
 @Data
 public class VideoMLRequestDto {
 
-    @JsonProperty("  role")
+    @JsonProperty("role")
     private String role;
     @JsonProperty("current_level")
     private String currentLevel;
     @JsonProperty("target_level")
     private String targetLevel;
-    @JsonProperty("skill_topic")
-    private String skillTopic;
-    @JsonProperty("chapter")
-    private String chapter;
 }

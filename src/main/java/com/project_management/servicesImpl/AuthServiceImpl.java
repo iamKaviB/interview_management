@@ -3,9 +3,11 @@ package com.project_management.servicesImpl;
 import com.project_management.dto.LoginResponseDTO;
 import com.project_management.dto.SignUpDTO;
 import com.project_management.dto.UserDTO;
+import com.project_management.models.Role;
 import com.project_management.models.RoleAccess;
 import com.project_management.models.User;
 import com.project_management.repositories.RoleAccessRepository;
+import com.project_management.repositories.RoleRepository;
 import com.project_management.repositories.UserRepository;
 import com.project_management.security.jwt.JwtTokenProvider;
 import com.project_management.services.AuthService;
@@ -31,6 +33,9 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
     @Override
     public LoginResponseDTO login(UserDTO userDTO) {
         User user = userRepository.findByUsername(userDTO.getUsername())
@@ -46,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
         // Fetch role-based accesses
         List<String> permissions = getPermissionsByUsername(user.getUsername());
 
-        return new LoginResponseDTO(token, user.getRole().getName(), permissions);
+        return new LoginResponseDTO(token, user.getRole().getName(),user.getId(), permissions);
     }
 
     @Override
@@ -55,6 +60,10 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(signUpDTO.getUsername());
         user.setEmail(signUpDTO.getEmail());
         user.setPassword(new BCryptPasswordEncoder().encode(signUpDTO.getPassword()));
+
+        Role role = roleRepository.findById(1L)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        user.setRole(role);
         return userRepository.save(user);
     }
 

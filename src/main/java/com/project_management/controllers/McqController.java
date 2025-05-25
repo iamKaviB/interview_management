@@ -48,7 +48,7 @@ public class McqController {
                     mlResponse.getStatusCode());
         }
 
-        return mlResponse;
+        return ResponseEntity.ok().body(mlResponse.getBody());
     }
 
     @PostMapping("/submit")
@@ -74,20 +74,21 @@ public class McqController {
                     mlResponse.getStatusCode());
         }
 
-        return mlResponse;
+        return ResponseEntity.ok().body(mlResponse.getBody());
     }
 
-    @GetMapping("/incorrect")
+    @GetMapping("/report")
     public ResponseEntity<IncorrectAnswersResponseDTO> getIncorrect(@RequestHeader(name = "X-Session-ID") String session){
 
         // Prepare headers
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Session-ID",session);
         HttpEntity<?> entity = new HttpEntity<>(null, headers);
 
         // Send the request to the ML service
         ResponseEntity<IncorrectAnswersResponseDTO> mlResponse = restTemplate.exchange(
-                mcqIncorrectUrl+"/"+session,
+                mcqIncorrectUrl,
                 HttpMethod.GET,
                 entity,
                 IncorrectAnswersResponseDTO.class
@@ -99,7 +100,7 @@ public class McqController {
                     mlResponse.getStatusCode());
         }
 
-        return mlResponse;
+        return ResponseEntity.ok().body(mlResponse.getBody());
     }
 
 

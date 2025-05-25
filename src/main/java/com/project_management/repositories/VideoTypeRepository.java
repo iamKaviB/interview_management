@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface VideoTypeRepository extends JpaRepository<VideoType,Long> {
-    List<VideoType> findAllByType(String type);
+    List<VideoType> findAllByTopic(String type);
     List<VideoType> findAllByRoleAndCurrentLevelAndTargetLevel(String role,String currentLevel,String targetLevel);
 }

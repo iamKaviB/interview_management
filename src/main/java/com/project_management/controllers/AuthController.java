@@ -20,9 +20,13 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<User> signup(@RequestBody SignUpDTO signUpDTO) {
+    public ResponseEntity<LoginResponseDTO> signup(@RequestBody SignUpDTO signUpDTO) {
         User user = authService.signup(signUpDTO);
-        return ResponseEntity.ok(user);
+        UserDTO dto  = new UserDTO();
+        dto.setUsername(signUpDTO.getUsername());
+        dto.setPassword(signUpDTO.getPassword());
+        LoginResponseDTO loginResponse = authService.login(dto);
+        return ResponseEntity.ok(loginResponse);
     }
 
     @PostMapping("/login")

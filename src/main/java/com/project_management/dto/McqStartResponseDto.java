@@ -6,6 +6,9 @@ import java.util.List;
 
 @Data
 public class McqStartResponseDto {
+    private Boolean correct;
+    private Float difficulty;
+    private Boolean game_over;
     private String level;
     private List<String> options;
     private String question;
@@ -19,6 +22,8 @@ public class McqStartResponseDto {
     public static class StateDTO {
         private int consecutive_correct;
         private int consecutive_wrong;
-        private int current_level;
+        private String level;
+        private float theta;
+        private int bloom_level;
     }
 }

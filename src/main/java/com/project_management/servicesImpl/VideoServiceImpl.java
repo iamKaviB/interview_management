@@ -37,7 +37,7 @@ public class VideoServiceImpl implements VideoService {
     public VideoResponseDto getVideoPredictions(Long userId) {
 
         UserBasics userBasics = userBasicService.getUserBasicsByUserId(userId);
-        List<VideoType> videoTypes = videoTypeRepository.findAllByRoleAndCurrentLevelAndTargetLevel(userBasics.getJobRole(),userBasics.getExperience(),userBasics.getTargetRole());
+        //List<VideoType> videoTypes = videoTypeRepository.findAllByRoleAndCurrentLevelAndTargetLevel(userBasics.getJobRole(),userBasics.getExperience(),userBasics.getTargetRole());
         VideoResponseDto responseDto = new VideoResponseDto();
         List<VideoResponseDto.VideoCatDto> responseList = new ArrayList<>();
 
@@ -46,23 +46,63 @@ public class VideoServiceImpl implements VideoService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        VideoMLRequestDto tempReq = new VideoMLRequestDto();
 
-        videoTypes.forEach(videoType -> {
+// Role mapping
+        String role = userBasics.getJobRole();
+        if ("QA".equalsIgnoreCase(role)) {
+            tempReq.setRole("QA Engineer");
+        } else if ("PM".equalsIgnoreCase(role)) {
+            tempReq.setRole("Product Manager");
+        } else {
+            tempReq.setRole("Software Engineer");
+        }
 
-            VideoMLRequestDto tempReq = new VideoMLRequestDto();
-            tempReq.setRole(userBasics.getJobRole());
-            tempReq.setCurrentLevel(userBasics.getExperience());
-            tempReq.setTargetLevel(userBasics.getTargetRole());
-            if ("MID".equalsIgnoreCase(userBasics.getTargetRole())) {
-                tempReq.setTargetLevel("Mid-level");
-            }
-            if ("MID".equalsIgnoreCase(userBasics.getJobRole())) {
-                tempReq.setCurrentLevel("Mid-level");
-            }
-            tempReq.setSkillTopic(videoType.getTopic());
-            tempReq.setChapter("1");
+// Level mapping
+        String experience = userBasics.getExperience();
+        String target = userBasics.getTargetRole();
 
-            HttpEntity<VideoMLRequestDto> entity = new HttpEntity<>(tempReq, headers);
+        String currentLevel = "";
+        String targetLevel = "";
+
+// Map current level based on experience
+        if ("Intern".equalsIgnoreCase(experience) || "Associate".equalsIgnoreCase(experience)) {
+            currentLevel = "Junior";
+        } else if ("Mid".equalsIgnoreCase(experience)) {
+            currentLevel = "Mid-level";
+        } else if ("Senior".equalsIgnoreCase(experience) || "Lead".equalsIgnoreCase(experience)) {
+            currentLevel = "Senior";
+        }
+
+// Map target level based on targetRole
+        if ("Intern".equalsIgnoreCase(target) || "Associate".equalsIgnoreCase(target)) {
+            targetLevel = "Junior";
+        } else if ("Mid".equalsIgnoreCase(target)) {
+            targetLevel = "Mid-level";
+        } else if ("Senior".equalsIgnoreCase(target) || "Lead".equalsIgnoreCase(target)) {
+            targetLevel = "Senior";
+        }
+
+// Apply override logic
+        if (
+                ("Intern".equalsIgnoreCase(experience) || "Associate".equalsIgnoreCase(experience)) &&
+                        ("Intern".equalsIgnoreCase(target) || "Associate".equalsIgnoreCase(target))
+        ) {
+            targetLevel = "Mid-level";  // Promote from Junior → Mid if both are low
+        } else if (
+                ("Associate".equalsIgnoreCase(experience) || "Mid".equalsIgnoreCase(experience)) &&
+                        ("Associate".equalsIgnoreCase(target) || "Mid".equalsIgnoreCase(target))
+        ) {
+            currentLevel = "Junior";  // Demote Associate/Mid to Junior in edge case
+        }
+
+        tempReq.setCurrentLevel(currentLevel);
+        tempReq.setTargetLevel(targetLevel);
+
+
+
+
+        HttpEntity<VideoMLRequestDto> entity = new HttpEntity<>(tempReq, headers);
 
             // Send the request to the ML service
             ResponseEntity<VideoMLResponseDto> mlResponse = restTemplate.exchange(
@@ -73,21 +113,24 @@ public class VideoServiceImpl implements VideoService {
             );
 
             VideoMLResponseDto mlResponseDto = mlResponse.getBody();
-            assert mlResponseDto != null;
-            List<String> videoStringList = Arrays.asList(mlResponseDto.getPrediction().split("\\|"));
+            List<VideoType> videoTypes = videoTypeRepository.findAllByTopic(mlResponseDto.getPrediction());
 
+        // Promote currentLevel before querying
+        if ("Junior".equalsIgnoreCase(currentLevel)) {
+            targetLevel = "Mid-level";
+        } else if ("Mid-level".equalsIgnoreCase(currentLevel)) {
+            targetLevel = "Senior";
+        }
 
-            videoStringList.forEach(video->{
-                VideoResponseDto.VideoCatDto videoDto = new VideoResponseDto.VideoCatDto();
-                videoDto.setType(video);
-                List<VideoType> tempVideoTypeList = videoTypeRepository.findAllByType(video);
-                tempVideoTypeList.forEach(temp->{
-                   List<Video> videoList =videoRepository.findAllByTypeId(temp.getId());
-                   videoDto.setVideoDtoList(videoList);
-                });
-                responseList.add(videoDto);
+//        List<VideoType> videoTypes = videoTypeRepository.findAllByRoleAndCurrentLevelAndTargetLevel(tempReq.getRole(), currentLevel,targetLevel);
+            videoTypes.forEach(videoType -> {
+                List<Video> videos = videoRepository.findAllByTypeId(videoType.getId());
+                VideoResponseDto.VideoCatDto responseDto1 = new VideoResponseDto.VideoCatDto();
+                responseDto1.setType(videoType.getType());
+                responseDto1.setVideoDtoList(videos);
+                responseList.add(responseDto1);
             });
-        });
+
 
         responseDto.setCatDtoList(responseList);
         return responseDto;

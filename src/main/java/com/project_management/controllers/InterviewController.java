@@ -1,9 +1,6 @@
 package com.project_management.controllers;
 
-import com.project_management.dto.InterviewAnswerRequestDto;
-import com.project_management.dto.InterviewRequestDTO;
-import com.project_management.dto.InterviewResponseDTO;
-import com.project_management.dto.InterviewResultResponseDTO;
+import com.project_management.dto.*;
 import com.project_management.services.InterviewService;
 import com.project_management.utils.TextToSpeechUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +29,11 @@ public class InterviewController {
     @PostMapping("/result")
     public ResponseEntity<InterviewResultResponseDTO> getResult(@RequestBody InterviewAnswerRequestDto requestDto){
         return ResponseEntity.status(200).body(interviewService.getResult(requestDto));
+    }
+
+    @PostMapping("/ask")
+    public ResponseEntity<InterviewAskResponseDTO> getResult(@RequestBody InterviewAskRequestDTO requestDto){
+        return ResponseEntity.status(200).body(interviewService.ask(requestDto));
     }
 
     @PostMapping("/convert")

@@ -19,6 +19,8 @@ public class InterviewServiceImpl implements InterviewService {
     private String interviewUrl;
     @Value("${api.interview.result.url}")
     private String submitUrl;
+    @Value("${api.interview.ask.url}")
+    private String askUrl;
     @Autowired
     private RestTemplate restTemplate;
     @Autowired
@@ -72,6 +74,24 @@ public class InterviewServiceImpl implements InterviewService {
                 HttpMethod.POST,
                 entity,
                 InterviewResultResponseDTO.class
+        );
+        return mlResponse.getBody();
+    }
+
+
+    @Override
+    public InterviewAskResponseDTO ask(InterviewAskRequestDTO requestDto) {
+        // Prepare headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<InterviewAskRequestDTO> entity = new HttpEntity<>(requestDto, headers);
+
+        // Send the request to the ML service
+        ResponseEntity<InterviewAskResponseDTO> mlResponse = restTemplate.exchange(
+                askUrl,
+                HttpMethod.POST,
+                entity,
+                InterviewAskResponseDTO.class
         );
         return mlResponse.getBody();
     }
